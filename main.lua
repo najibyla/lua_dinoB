@@ -4,6 +4,7 @@ local Controls  = require("scripts/controls")
 local HighScore = require("scripts/highscore")
 local engine    = require("engine")
 local config    = require("game_config")
+local L         = require("zones")   -- constantes layout + factories zones/dinos
 
 -- ============================================================
 -- Résolution virtuelle
@@ -12,24 +13,24 @@ local VIRTUAL_W, VIRTUAL_H = 1280, 800
 local canvas
 
 -- ============================================================
--- Layout zones de jeu (canvas 1280×800)
+-- Alias locaux des constantes de layout (définies dans zones.lua)
 -- ============================================================
-local LAYOUT_UPPER_Y = 220    -- y des zones territoire / jungle
-local LAYOUT_UPPER_H = 155    -- hauteur des zones supérieures
-local LAYOUT_DINO_Y  = 50     -- y des piles dinos (et trophées)
-local LAYOUT_DINO_H  = 145    -- hauteur des piles dinos
-local LAYOUT_SEP_X   = 530    -- séparateur visuel L1 / L2
-local LAYOUT_RES_Y   = 382    -- y ligne ressources
-local LAYOUT_MSG_Y   = 424    -- y ligne message tour
-local LAYOUT_TAB_Y   = 472    -- y zone Tableau (ventilé sous le message)
-local LAYOUT_TAB_H   = 132    -- hauteur zone Tableau
-local LAYOUT_HAND_Y  = LAYOUT_TAB_Y + LAYOUT_TAB_H + 18  -- y main / deck / défausse
-local LAYOUT_HAND_H  = 140    -- hauteur zones du bas
-local LAYOUT_SIDE_X  = 1020   -- x colonne droite (trophées, ATK, EndTurn)
-local LAYOUT_ATK_Y   = LAYOUT_TAB_Y + 4   -- y panel ATK
-local LAYOUT_BTN_Y   = LAYOUT_HAND_Y + 22 -- y bouton Fin de Tour
-local LAYOUT_BTN_W   = 130
-local LAYOUT_BTN_H   = 50
+local LAYOUT_UPPER_Y = L.UPPER_Y
+local LAYOUT_UPPER_H = L.UPPER_H
+local LAYOUT_DINO_Y  = L.DINO_Y
+local LAYOUT_DINO_H  = L.DINO_H
+local LAYOUT_SEP_X   = L.SEP_X
+local LAYOUT_RES_Y   = L.RES_Y
+local LAYOUT_MSG_Y   = L.MSG_Y
+local LAYOUT_TAB_Y   = L.TAB_Y
+local LAYOUT_TAB_H   = L.TAB_H
+local LAYOUT_HAND_Y  = L.HAND_Y
+local LAYOUT_HAND_H  = L.HAND_H
+local LAYOUT_SIDE_X  = L.SIDE_X
+local LAYOUT_ATK_Y   = L.ATK_Y
+local LAYOUT_BTN_Y   = L.BTN_Y
+local LAYOUT_BTN_W   = L.BTN_W
+local LAYOUT_BTN_H   = L.BTN_H
 
 -- ============================================================
 -- Machine à états
@@ -336,10 +337,12 @@ function love.mousepressed(mx, my, button)
             end
         end
         for _, tzone in ipairs({ state.zones.territory_left, state.zones.territory_right }) do
-            local market_card = engine.findCardInZone(tzone, vx, vy)
-            if market_card then
-                buyCard(market_card, tzone)
-                return
+            if #tzone.cards > 0 then
+                local top = tzone.cards[#tzone.cards]
+                if engine.pointInRect(vx, vy, top.x, top.y, engine.CARD_W, engine.CARD_H) then
+                    buyCard(top, tzone)
+                    return
+                end
             end
         end
         local card = engine.findCardInZone(state.zones.hand, vx, vy)
@@ -365,10 +368,18 @@ function love.mousereleased(mx, my, button)
         local vx, vy = getVirtualMousePos()
         local card    = state.drag.card
         local dropped = false
-        local tz      = state.zones.tableau
+        local tz  = state.zones.tableau
+        local tzl = state.zones.territory_left
+        local tzr = state.zones.territory_right
         if engine.pointInRect(vx, vy, tz.x, tz.y, tz.w, tz.h) then
             engine.addCard(tz, card)
             playCard(card)
+            dropped = true
+        elseif engine.pointInRect(vx, vy, tzl.x, tzl.y, tzl.w, tzl.h) then
+            huntTerritory(card, tzl)
+            dropped = true
+        elseif engine.pointInRect(vx, vy, tzr.x, tzr.y, tzr.w, tzr.h) then
+            huntTerritory(card, tzr)
             dropped = true
         end
         if not dropped then
@@ -850,16 +861,7 @@ function initGame(difficultyIndex, clan)
         }
     end
 
-    state.zones = {
-        deck        = engine.newZone(30,          LAYOUT_HAND_Y, 100, LAYOUT_HAND_H, "stack", "Deck"),
-        hand        = engine.newZone(150,         LAYOUT_HAND_Y, 700, LAYOUT_HAND_H, "fan",   "Main"),
-        discard     = engine.newZone(870,         LAYOUT_HAND_Y, 100, LAYOUT_HAND_H, "stack", "Défausse"),
-        tableau     = engine.newZone(30,          LAYOUT_TAB_Y,  940, LAYOUT_TAB_H,  "row",   "Tableau"),
-        territory_left  = engine.newZone(10,  LAYOUT_UPPER_Y, 420, LAYOUT_UPPER_H, "row",   "Territoire"),
-        jungle          = engine.newZone(440, LAYOUT_UPPER_Y, 130, LAYOUT_UPPER_H, "stack", "Jungle"),
-        territory_right = engine.newZone(580, LAYOUT_UPPER_Y, 420, LAYOUT_UPPER_H, "row",   "Territoire"),
-        trophies    = engine.newZone(LAYOUT_SIDE_X, LAYOUT_DINO_Y, 230, 160, "row", "Trophées"),
-    }
+    state.zones  = L.createGameZones()
     state.volcan = false
 
     -- Deck de départ : clan choisi + 1 chef aléatoire
@@ -905,42 +907,7 @@ function initGame(difficultyIndex, clan)
     -- Les territoires de chasse démarrent vides (remplis par l'action Chasse)
 
     -- 2 piles Dinos : 1 pile L1 (gauche, 4 cartes) + 1 pile L2 (droite, 3 cartes)
-    local function shuffle_pool(pool)
-        for i = #pool, 2, -1 do
-            local j = love.math.random(i)
-            pool[i], pool[j] = pool[j], pool[i]
-        end
-    end
-
-    local l1_pool, l2_pool = {}, {}
-    for _, db in ipairs(config.get_cards_of_type("dino_l1")) do
-        for _ = 1, (db.qty or 1) do table.insert(l1_pool, db) end
-    end
-    for _, db in ipairs(config.get_cards_of_type("dino_l2")) do
-        for _ = 1, (db.qty or 1) do table.insert(l2_pool, db) end
-    end
-    shuffle_pool(l1_pool)
-    shuffle_pool(l2_pool)
-
-    local function build_dino_pile(pool, count, x, y, w, h, level)
-        local zone = engine.newZone(x, y, w, h, "stack", "")
-        -- Empiler face cachée du bas vers le haut
-        for i = count, 1, -1 do
-            local card = engine.newCreature(config.make_creature(pool[i]))
-            card.face_up = false
-            engine.addCard(zone, card)
-        end
-        -- Révéler uniquement la carte du dessus
-        if #zone.cards > 0 then
-            zone.cards[#zone.cards].face_up = true
-        end
-        return { zone = zone, level = level }
-    end
-
-    state.dino_piles = {
-        build_dino_pile(l1_pool, config.solo_dino_left_count,  150, LAYOUT_DINO_Y, 160, LAYOUT_DINO_H, 1),
-        build_dino_pile(l2_pool, config.solo_dino_right_count, 700, LAYOUT_DINO_Y, 160, LAYOUT_DINO_H, 2),
-    }
+    state.dino_piles = L.createDinoPiles()
 
     state.turn      = 1
     state.phase     = "action"
@@ -1093,9 +1060,51 @@ function spendResource(key, amount)
 end
 
 function playCard(card)
-    if card.food_gain   > 0 then addResource("food", card.food_gain) end
+    if card.food_gain > 0 then addResource("food", card.food_gain) end
     state.strength = state.strength + card.strength
     state.message  = "Joué : " .. card.name .. " | Force totale : " .. state.strength
+end
+
+function huntTerritory(card, territory)
+    local force = card.strength
+    if force <= 0 then
+        engine.addCard(state.zones.hand, card)
+        engine.layoutZone(state.zones.hand)
+        state.message = card.name .. " n'a pas de Force pour chasser"
+        return
+    end
+
+    -- La carte est activée (placée dans le tableau, utilisée)
+    engine.addCard(state.zones.tableau, card)
+    engine.layoutZone(state.zones.tableau)
+
+    local jungle       = state.zones.jungle
+    local food_gained  = 0
+    local revealed     = 0
+
+    for _ = 1, force do
+        if #jungle.cards == 0 then break end
+        local c = table.remove(jungle.cards, #jungle.cards)
+        c.face_up = true
+        if c.type == "enemy" then
+            -- Ennemi pendant une chasse : remis sous la Jungle sans effet
+            table.insert(jungle.cards, 1, c)
+            c.face_up = false
+        else
+            engine.addCard(territory, c)
+            food_gained = food_gained + (c.food_gain or 0)
+            revealed    = revealed + 1
+        end
+    end
+
+    engine.layoutZone(territory)
+    engine.layoutZone(jungle)
+
+    if food_gained > 0 then addResource("food", food_gained) end
+
+    local side = (territory == state.zones.territory_left) and "gauche" or "droite"
+    state.message = "Chasse " .. side .. " : " .. revealed .. " carte(s) revelee(s)"
+        .. (food_gained > 0 and " | +" .. food_gained .. " Nourriture" or "")
 end
 
 function attackCreature(creature, pile)
