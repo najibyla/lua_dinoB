@@ -1,10 +1,12 @@
-local Settings  = require("scripts/settings")
-local Audio     = require("scripts/audio")
-local Controls  = require("scripts/controls")
-local HighScore = require("scripts/highscore")
-local engine    = require("engine")
-local config    = require("game_config")
-local L         = require("zones")   -- constantes layout + factories zones/dinos
+local Settings      = require("scripts/settings")
+local Audio         = require("scripts/audio")
+local Controls      = require("scripts/controls")
+local HighScore     = require("scripts/highscore")
+local engine        = require("engine")
+local config        = require("game_config")
+local L             = require("zones")   -- constantes layout + factories zones/dinos
+local solo          = require("solo_rules")
+local card_powers   = require("card_powers")
 
 -- ============================================================
 -- Résolution virtuelle
@@ -121,6 +123,7 @@ function love.load()
     canvas = love.graphics.newCanvas(VIRTUAL_W, VIRTUAL_H)
     canvas:setFilter("nearest", "nearest")
     engine.initFonts(14, 14)
+    rageFont = love.graphics.newFont("assets/fonts/NotoSans-Bold.ttf", 72)
 
     Audio.init(Settings)
     love.audio.setVolume(Settings.volume)
@@ -146,9 +149,63 @@ function love.update(dt)
             Audio.playMusic()
         end
     elseif currentState == STATE.playing then
+        -- Decrement RAGE animation timer
+        if state.rage_timer > 0 then
+            state.rage_timer = state.rage_timer - dt
+        end
+       -- Decrement shake timer
+        if state.shake_timer > 0 then
+            state.shake_timer = state.shake_timer - dt
+        end
         updateGame(dt)
     end
 end
+
+
+-- ── Rendu des ennemis RAGE ───────────────────────────────────
+local ENEMY_CW      = 65
+local ENEMY_CH      = 95
+local ENEMY_SPACING = 70
+local ENEMY_MAX     = 4
+
+-- Position x du i-ème ennemi : gauche = du centre vers la gauche, droite = du centre vers la droite
+local function enemyPosX(side, i)
+    if side == "left" then
+        return L.ENEMY_LEFT_X + L.ENEMY_LEFT_W - i * ENEMY_SPACING   -- 250, 180, 110, 40
+    else
+        return L.ENEMY_RIGHT_X + (i - 1) * ENEMY_SPACING             -- 720, 790, 860, 930
+    end
+end
+
+-- Dessine les ennemis du centre vers l'extérieur
+function drawEnemies(enemies, side, y)
+    for i, enemy in ipairs(enemies) do
+        if i > ENEMY_MAX then break end
+        local ex = enemyPosX(side, i)
+        love.graphics.setColor(0.7, 0.05, 0.05, 0.95)
+        love.graphics.rectangle("fill", ex, y, ENEMY_CW, ENEMY_CH, 6)
+        love.graphics.setColor(1, 0.2, 0.2)
+        love.graphics.setLineWidth(2)
+        love.graphics.rectangle("line", ex, y, ENEMY_CW, ENEMY_CH, 6)
+        love.graphics.setLineWidth(1)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(enemy.name or "?", ex + 2, y + 8,  ENEMY_CW - 4, "center")
+        love.graphics.setColor(1, 0.6, 0.6)
+        love.graphics.printf("ENNEMI",           ex + 2, y + 28, ENEMY_CW - 4, "center")
+        local cost = config.enemy_costs[enemy.id]
+        if cost then
+            love.graphics.setColor(1, 1, 0.6)
+            love.graphics.printf("F:" .. cost.force, ex + 2, y + 52, ENEMY_CW - 4, "center")
+            if cost.resource and cost.amount then
+                love.graphics.printf(cost.resource:sub(1,4) .. ":" .. cost.amount,
+                                     ex + 2, y + 68, ENEMY_CW - 4, "center")
+            end
+        end
+    end
+    love.graphics.setColor(1, 1, 1)
+end
+
+
 
 -- ============================================================
 -- love.draw
@@ -173,14 +230,136 @@ function love.draw()
     local scale  = math.min(ww / VIRTUAL_W, wh / VIRTUAL_H)
     local ox     = (ww - VIRTUAL_W * scale) / 2
     local oy     = (wh - VIRTUAL_H * scale) / 2
+    --love.graphics.draw(canvas, ox, oy, 0, scale, scale)
+    
+    -- Apply screen shake offset
+    local shake_x, shake_y = 0, 0
+    if state and state.shake_timer and state.shake_timer > 0 then
+        shake_x = love.math.random(-state.shake_intensity, state.shake_intensity)
+        shake_y = love.math.random(-state.shake_intensity, state.shake_intensity)
+    end
+    
     love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.draw(canvas, ox, oy, 0, scale, scale)
+    love.graphics.draw(canvas, ox + shake_x, oy + shake_y, 0, scale, scale)
+
+
+    -- RAGE visual overlay: red border flash + text
+    --if state.rage_timer > 0 then
+--[[     if state and state.rage_timer and state.rage_timer > 0 then 
+        love.graphics.setColor(1, 0, 0, 0.6)
+        love.graphics.setLineWidth(6)
+        love.graphics.rectangle("line", 3, 3, 1274, 794)
+        love.graphics.setLineWidth(1)
+
+        love.graphics.setColor(1, 0, 0, 1)
+        love.graphics.printf("RAGE!", 0, 350, 1280, "center")
+        love.graphics.setColor(1, 1, 1, 1)
+    end --]]
+
+     -- RAGE visual overlay (drawn on screen, after canvas ) 
+         if state and state.rage_timer and state.rage_timer > 0 then 
+            love.graphics.push() 
+            love.graphics.translate(ox, oy)
+            love.graphics.scale(scale , scale)
+             
+            -- Red semi-transparent overlay 
+            love.graphics.setColor(1 , 0, 0, 0.15) 
+            love.graphics.rectangle("fill", 0, 0, 1280 , 800)
+            -- Red border 
+            love.graphics.setColor(1, 0, 0 , 0.8)
+            love.graphics.setLineWidth(8)
+            love.graphics.rectangle("line", 4, 4, 1272, 792) 
+            love.graphics.setLineWidth(1) 
+              
+            -- Big "RAGE!" text 
+            love.graphics.setFont(rageFont ) 
+            
+            -- Shadow
+            love.graphics.setColor(0, 0, 0, 0.8) 
+            love.graphics.printf("RAGE !", 3, 353, 1280 , "center") 
+            
+            -- Main text 
+            love.graphics.setColor(1, 0.2, 0, 1) 
+            love.graphics.printf("RAGE !", 0, 350, 1280, "center") 
+            engine.useDefault() 
+            love.graphics.setColor(1, 1, 1, 1 ) 
+            love.graphics.pop()
+        end 
+
+    -- Score breakdown overlay
+--[[     if state.game_over and state.final_score then
+        -- Dim the game board behind the overlay
+        love.graphics.setColor(0, 0, 0, 0.85)
+        love.graphics.rectangle("fill", 0, 0, 1280, 800)
+
+        -- Header: victory or defeat
+        love.graphics.setColor(1, 1, 1)
+        local header = state.victory and "VICTOIRE !" or "DEFAITE !"
+        love.graphics.printf(header, 0, 120, 1280, "center")
+
+        -- Score breakdown by category
+        local s = state.final_score
+        local y = 260
+        local gap = 40
+
+        love.graphics.printf("Familles : " .. s.families .. " x 2VP = " .. (s.families * 2) .. " VP", 0, y, 1280, "center")
+        y = y + gap
+        love.graphics.printf("Totems : " .. s.totems .. " x 1VP = " .. (s.totems * 1) .. " VP", 0, y, 1280, "center")
+        y = y + gap
+        love.graphics.printf("Dinosaures : " .. s.dinos .. " x 1VP = " .. (s.dinos * 1) .. " VP", 0, y, 1280, "center")
+        y = y + gap
+        love.graphics.printf("Oeufs : " .. s.eggs .. " VP", 0, y, 1280, "center")
+        y = y + gap * 2
+
+        -- Total score
+        love.graphics.printf("TOTAL : " .. s.total .. " VP", 0, y, 1280, "center")
+        y = y + gap * 2
+
+        -- Restart/menu prompt
+        love.graphics.printf("R = Recommencer | Echap = Menu", 0, y, 1280, "center")
+    end --]]
+    -- Score breakdown overlay 
+        if state and state.game_over and state.final_score then
+            love.graphics.push()
+            love.graphics.translate( ox, oy)
+            love.graphics.scale(scale, scale) 
+            love.graphics.setColor(0 , 0, 0, 0.85) 
+            love.graphics.rectangle("fill", 0, 0, 1280 , 800) 
+            love.graphics.setColor(1, 1, 1 ) 
+                
+            local header = state.victory and "VICTOIRE !" or "DEFAITE !" 
+            love .graphics.printf(header, 0 , 120, 1280, "center") 
+            local s = state.final_score 
+            local y = 260 
+            local gap = 40 
+            love.graphics.printf("Familles : " .. s.families .. " x 2VP = " .. (s.families * 2) .. " VP", 0, y, 1280, "center")
+            y = y + gap 
+            love.graphics.printf("Totems : " .. s.totems .. " x 1VP = " .. (s. totems * 1) .. " VP ", 0, y, 1280, " center")
+            y = y + gap 
+            love.graphics.printf("Dinosaures : " .. s.dinos .. " x 1VP = " .. (s.dinos * 1) .. " VP", 0, y, 1280, "center") 
+            y = y + gap 
+            love.graphics.printf("Oeufs : " .. s.eggs .. " VP", 0, y, 1280 , "center") 
+            y = y + gap * 2 
+            love .graphics.printf("TOTAL : " .. s.total .. " VP ", 0, y, 1280, " center")
+            y = y + gap * 2
+            love .graphics.printf("R = Recommencer | Echap = Menu", 0 , y, 1280, "center") love.graphics.pop() 
+        end
 end
 
 -- ============================================================
 -- love.keypressed
 -- ============================================================
 function love.keypressed(key)
+    -- Game-over screen: R to restart, Escape to menu
+    if state.game_over then
+        if key == "r" then
+            initGame()
+        elseif key == "escape" then
+            gameState = "menu"
+        end
+        return
+    end
+
     if currentState == STATE.splash then
         if key == "return" or key == "space" or key == "escape" then
             splashTimer = SPLASH_DURATION
@@ -325,10 +504,242 @@ function love.mousepressed(mx, my, button)
         end
 
     elseif currentState == STATE.playing then
+
+        -- Handle clicks on the action selection popup
+        if state.pending_activation and state.pending_actions then
+            local popup_x, popup_y = 500, 250
+            local btn_w, btn_h = 200, 36
+            local clicked_action = nil
+
+            for i, action in ipairs(state.pending_actions) do
+                local btn_y = popup_y + (i - 1) * (btn_h + 6)
+                --[[ if mx >= popup_x and mx <= popup_x + btn_w
+                and my >= btn_y and my <= btn_y + btn_h then --]]
+                if vx >= popup_x and vx <= popup_x + btn_w
+                and vy >= btn_y and vy <= btn_y + btn_h then
+                    clicked_action = action
+                    break
+                end
+            end
+
+
+
+            --[[if clicked_action then
+                -- Dispatch the selected action (wired in the next substep)
+                solo.activate_clan_card(state.pending_activation, state)
+                state.pending_activation = nil
+                state.pending_actions = nil
+                return
+            else
+                -- Clicked outside popup: dismiss it
+                state.pending_activation = nil
+                state.pending_actions = nil
+                return
+            end --]]
+            
+            if clicked_action then
+                local card = state.pending_activation
+                local action_key = clicked_action.key
+
+                if action_key == solo.ACTIONS.USE_POWER then
+                    solo.activate_clan_card(card, state)
+                    local db_entry = config.get_card(card.id)
+                    if db_entry and db_entry.card_power then
+                        local power_fn = card_powers[db_entry.card_power]
+                        if power_fn then
+                            local gs = {
+                                food = state.resources.food.current,
+                                ami = state.resources.ami.current,
+                                dino_tokens = state.resources.dino_tokens.current,
+                                attack_force = state.strength,
+                                message = "",
+                                pending_draw = 0,
+                            }
+                            power_fn(gs, card)
+                            state.resources.food.current = math.min(gs.food, state.resources.food.max)
+                            state.resources.ami.current = math.min(gs.ami, state.resources.ami.max)
+                            state.resources.dino_tokens.current = math.min(gs.dino_tokens, state.resources.dino_tokens.max)
+                            state.strength = gs.attack_force
+                            state.message = gs.message or state.message
+                            if (gs.pending_draw or 0) > 0 then
+                                engine.dealCards(state.zones.deck, state.zones.hand, gs.pending_draw)
+                            end
+                        end
+                    end
+                elseif action_key == solo.ACTIONS.SUPPORT then
+                    -- Don't activate yet — show secondary popup to pick an action card
+                    state.selecting_action_card = true
+                    -- Build list of action cards in hand
+                    state.action_card_choices = {}
+                    for _, c in ipairs(state.zones.hand.cards) do
+                        local cdb = config.get_card(c.id)
+                        if cdb and cdb.card_type == "action" then
+                            table.insert(state.action_card_choices, c)
+                        end
+                    end
+                    -- Don't clear pending_activation yet — we still need it
+                    state.pending_actions = nil
+                    return
+
+                elseif action_key == solo.ACTIONS.HUNT_LEFT then
+                    local revealed, food = solo.hunt(card, state.zones.territory_left, state)
+                    solo.activate_clan_card(card, state)
+                    state.message = revealed .. " carte(s) chassees a gauche, +" .. food .. " nourriture"
+
+                elseif action_key == solo.ACTIONS.HUNT_RIGHT then
+                    local revealed, food = solo.hunt(card, state.zones.territory_right, state)
+                    solo.activate_clan_card(card, state)
+                    state.message = revealed .. " carte(s) chassees a droite, +" .. food .. " nourriture"
+
+                elseif action_key == solo.ACTIONS.FORM_AMI then
+                    state.ami_initiator       = card
+                    state.ami_partner_choices = solo.get_ami_partners(card, state)
+                    state.selecting_ami_partner = true
+                    state.pending_actions = nil
+                    return  -- keep pending_activation for form_ami_pair
+
+                else
+                    solo.activate_clan_card(card, state)
+                    state.message = "Action en cours: " .. (clicked_action.label or "?")
+                end
+
+                state.pending_activation = nil
+                state.pending_actions = nil
+                return
+            else
+                -- Clicked outside popup: dismiss it (KEEP THIS!)
+                state.pending_activation = nil
+                state.pending_actions = nil
+                return
+            end
+
+        end
+
+        -- Handle clicks on the action card selection popup
+        if state.selecting_action_card and state.action_card_choices then
+            local popup_x, popup_y = 500, 250
+            local btn_w, btn_h = 200, 36
+            local clicked_card = nil
+
+            for i, c in ipairs(state.action_card_choices) do
+                local btn_y = popup_y + (i - 1) * (btn_h + 6)
+                if vx >= popup_x and vx <= popup_x + btn_w
+                and vy >= btn_y and vy <= btn_y + btn_h then
+                    clicked_card = c
+                    break
+                end
+            end
+
+            if clicked_card then
+                -- Activate the clan card (no power fired)
+                solo.activate_clan_card(state.pending_activation, state)
+
+                -- Remove action card from hand
+                engine.removeCard(state.zones.hand, clicked_card)
+
+                -- Route to totem zone or tableau
+                local db = config.get_card(clicked_card.id)
+                if db and db.has_totem then
+                    engine.addCard(state.zones.totem, clicked_card)
+                else
+                    engine.addCard(state.zones.tableau, clicked_card)
+                end
+
+                -- Fire the action card's power
+                if db and db.card_power then
+                    local power_fn = card_powers[db.card_power]
+                    if power_fn then
+                        local gs = solo.build_power_state(state)
+                        power_fn(gs, clicked_card)
+                        solo.apply_power_state(gs, state)
+                    end
+                end
+
+                state.message = "Action activee: " .. (clicked_card.name or "?")
+            else
+                -- Clicked outside: cancel
+                state.message = "Support annule."
+            end
+
+            state.pending_activation = nil
+            state.selecting_action_card = false
+            state.action_card_choices = nil
+            return
+        end
+
+        -- Handle FORM_AMI partner selection popup
+        if state.selecting_ami_partner and state.ami_partner_choices then
+            local popup_x, popup_y = 500, 250
+            local btn_w, btn_h = 200, 36
+            local chosen = nil
+
+            for i, c in ipairs(state.ami_partner_choices) do
+                local btn_y = popup_y + (i - 1) * (btn_h + 6)
+                if vx >= popup_x and vx <= popup_x + btn_w
+                and vy >= btn_y and vy <= btn_y + btn_h then
+                    chosen = c
+                    break
+                end
+            end
+
+            if chosen then
+                state.message = solo.form_ami_pair(state.ami_initiator, chosen, state)
+            else
+                state.message = "Paire annulee."
+            end
+
+            state.pending_activation       = nil
+            state.selecting_ami_partner    = false
+            state.ami_partner_choices      = nil
+            state.ami_initiator            = nil
+            return
+        end
+
+        -- Handle clicks on totem zone cards
+        local totem_zone = state.zones.totem
+        for i, card in ipairs(totem_zone.cards) do
+            local btn_x = totem_zone.x
+            local btn_y = totem_zone.y + (i - 1) * 40
+            local btn_w = totem_zone.w
+            local btn_h = 32
+
+            if vx >= btn_x and vx <= btn_x + btn_w
+            and vy >= btn_y and vy <= btn_y + btn_h then
+                local ok, msg = solo.activate_single_totem(card, state)
+                state.message = msg or "Totem active."
+                return
+            end
+        end
+
+        -- Clic sur ennemis RAGE (zones latérales, centre → extérieur)
+        if checkEnemyClick(vx, vy, state.enemies_left,  "left",  LAYOUT_UPPER_Y) then return end
+        if checkEnemyClick(vx, vy, state.enemies_right, "right", LAYOUT_UPPER_Y) then return end
+
+
+        -- Handle cave zone clicks
+        local cave_zone = state.zones.cave
+        if engine.pointInRect(vx, vy, cave_zone.x, cave_zone.y, cave_zone.w, cave_zone.h) then
+            if state.pending_cave_card then
+                -- A hand card was selected — swap it with cave
+                local old = solo.swap_cave(state.pending_cave_card, state)
+                if old then
+                    state.message = "Grotte: echange " .. state.pending_cave_card.name .. " <-> " .. old.name
+                else
+                    state.message = "Grotte: " .. state.pending_cave_card.name .. " stockee."
+                end
+                state.pending_cave_card = nil
+            else
+                state.message = "Selectionnez d'abord une carte en main."
+            end
+            return
+        end
+
+
         if engine.pointInRect(vx, vy, LAYOUT_SIDE_X, LAYOUT_BTN_Y, LAYOUT_BTN_W, LAYOUT_BTN_H) then
             endTurn()
             return
         end
+
         for _, pile in ipairs(state.dino_piles) do
             local top = #pile.zone.cards > 0 and pile.zone.cards[#pile.zone.cards] or nil
             if top and engine.pointInRect(vx, vy, top.x, top.y, engine.CARD_W, engine.CARD_H) then
@@ -336,6 +747,8 @@ function love.mousepressed(mx, my, button)
                 return
             end
         end
+
+
         for _, tzone in ipairs({ state.zones.territory_left, state.zones.territory_right }) do
             if #tzone.cards > 0 then
                 local top = tzone.cards[#tzone.cards]
@@ -345,6 +758,24 @@ function love.mousepressed(mx, my, button)
                 end
             end
         end
+
+        
+--[[         -- Handle hand card click for cave selection
+        -- (Add this BEFORE your existing hand card / drag logic)
+        for _, card in ipairs(state.zones.hand.cards) do
+            local W, H = engine.CARD_W, engine.CARD_H
+            if engine.pointInRect(vx, vy, card.x, card.y, W, H) then
+                -- Right-click or modifier could be used, but simple toggle works too
+                if state.pending_cave_card == card then
+                    -- Deselect
+                    state.pending_cave_card = nil
+                    state.message = "Selection annulee."
+                    return
+                end
+            end
+        end --]]
+
+
         local card = engine.findCardInZone(state.zones.hand, vx, vy)
         if card then
             state.drag.card   = card
@@ -354,6 +785,7 @@ function love.mousepressed(mx, my, button)
             engine.removeCard(state.zones.hand, card)
             return
         end
+
     end
 end
 
@@ -371,7 +803,7 @@ function love.mousereleased(mx, my, button)
         local tz  = state.zones.tableau
         local tzl = state.zones.territory_left
         local tzr = state.zones.territory_right
-        if engine.pointInRect(vx, vy, tz.x, tz.y, tz.w, tz.h) then
+        --[[ if engine.pointInRect(vx, vy, tz.x, tz.y, tz.w, tz.h) then
             engine.addCard(tz, card)
             playCard(card)
             dropped = true
@@ -380,6 +812,38 @@ function love.mousereleased(mx, my, button)
             dropped = true
         elseif engine.pointInRect(vx, vy, tzr.x, tzr.y, tzr.w, tzr.h) then
             huntTerritory(card, tzr)
+            dropped = true
+        end --]]
+
+
+
+        -- Cave swap via drag-and-drop 
+        if engine.pointInRect(vx, vy, state.zones.cave.x, state.zones.cave.y,
+                            state.zones.cave.w, state.zones.cave.h) then
+            local old = solo.swap_cave(card, state)
+            if old then
+                state.message = "Grotte: echange " .. card.name .. " <-> " .. old.name
+            else
+                state.message = "Grotte: " .. card.name .. " stockee."
+            end
+            dropped = true
+        
+
+
+        -- Tableau drop with activation
+        elseif engine.pointInRect(vx, vy, tz.x, tz.y, tz.w, tz.h) then
+            local db_entry = config.get_card(card.id)
+            if db_entry and db_entry.card_type == "clan" then
+                -- Return card to hand, then open action popup
+                engine.addCard(state.drag.origin, card)
+                -- Set this card as pending activation and build the action list
+                state.pending_activation = card
+                state.pending_actions = solo.get_available_actions(card, state)
+            else
+                -- Non-clan cards can't be activated directly
+                state.message = "Seules les cartes Clan peuvent etre activees."
+                engine.addCard(state.drag.origin, card)
+            end
             dropped = true
         end
         if not dropped then
@@ -861,6 +1325,27 @@ function initGame(difficultyIndex, clan)
         }
     end
 
+    -- Build the egg pool: 12 green (1pt), 8 red (2pt), 4 blue (2pt indestructible)
+    local egg_pool = {}
+    for _ = 1, 12 do table.insert(egg_pool, { value = 1, color = "vert" }) end
+    for _ = 1, 8 do table.insert(egg_pool, { value = 2, color = "rouge" }) end
+    for _ = 1, 4 do table.insert(egg_pool, { value = 2, color = "bleu", indestructible = true }) end
+
+    -- Shuffle the full pool using Fisher-Yates
+    for i = #egg_pool, 2, -1 do
+        local j = love.math.random(i)
+        egg_pool[i], egg_pool[j] = egg_pool[j], egg_pool[i]
+    end
+
+    -- Take the first 12 eggs for solo mode
+    state.egg_bank = {}
+    for i = 1, 12 do
+        table.insert(state.egg_bank, egg_pool[i])
+    end
+
+    -- Track eggs the player has collected (starts empty)
+    state.eggs_collected = {}
+
     state.zones  = L.createGameZones()
     state.volcan = false
 
@@ -917,6 +1402,31 @@ function initGame(difficultyIndex, clan)
     state.game_over = false
     state.drag      = { card = nil, origin = nil, ox = 0, oy = 0 }
     state.mx, state.my = 0, 0
+    
+    -- Track which clan card is waiting for action selection (nil = no popup)
+    state.pending_activation = nil
+    -- Accumulated force from activated clan cards this turn
+    state.strength = 0
+    state.selecting_action_card = false
+    state.action_card_choices = nil
+    -- Track which hand card is selected for cave swap (nil = none)
+    state.pending_cave_card = nil
+    -- FORM_AMI partner selection popup
+    state.selecting_ami_partner = false
+    state.ami_partner_choices   = nil
+    state.ami_initiator         = nil
+    -- Enemy tracking for RAGE (one array per territory side)
+    state.enemies_left = {}
+    state.enemies_right = {}
+
+    -- RAGE animation state
+    state.rage_active = false
+    state.rage_timer = 0
+
+    -- Screen shake state
+    state.shake_timer = 0
+    state.shake_intensity = 0
+
 
     drawHand()
 end
@@ -931,6 +1441,36 @@ function updateGame(dt)
         state.drag.card.y = state.my - state.drag.oy
     end
 end
+
+
+---
+-- Check if click lands on this enemy card
+--[[ function checkEnemyClick(mx, my, enemies, x, y, side)
+    for i, enemy in ipairs(enemies) do
+        local ex = x + (i - 1) * 70
+        if engine.pointInRect(mx, my, ex, y, 60, 90) then
+            local msg = solo.defeat_enemy(enemy, side, state)
+            state.message = msg or "Ennemi vaincu !"
+            return true
+        end
+    end
+    return false
+end --]]
+
+-- Détection de clic sur les ennemis RAGE (même logique que drawEnemies)
+function checkEnemyClick(mx, my, enemies, side, y)
+    for i, enemy in ipairs(enemies) do
+        if i > ENEMY_MAX then break end
+        local ex = enemyPosX(side, i)
+        if engine.pointInRect(mx, my, ex, y, ENEMY_CW, ENEMY_CH) then
+            local ok, msg = solo.defeat_enemy(enemy, side, state)
+            state.message = msg
+            return true
+        end
+    end
+    return false
+end
+
 
 -- ============================================================
 -- Deck building — draw
@@ -982,16 +1522,75 @@ function drawGame()
     -- Séparateur visuel L1/L2
     love.graphics.setColor(0.3, 0.3, 0.4, 0.5)
     love.graphics.setLineWidth(1)
-    love.graphics.line(LAYOUT_SEP_X, LAYOUT_DINO_Y - 15, LAYOUT_SEP_X, LAYOUT_UPPER_Y - 5)
+    --love.graphics.line(LAYOUT_SEP_X, LAYOUT_DINO_Y - 15, LAYOUT_SEP_X, LAYOUT_UPPER_Y - 5)
 
-    -- Territoires de chasse + Jungle centrale
+    -- Territoires (stacks étroits) + Jungle centrale
     engine.drawZone(state.zones.territory_left,  dragged)
-    engine.drawZone(state.zones.jungle,           dragged)
-    engine.drawZone(state.zones.territory_right,  dragged)
+    engine.drawZone(state.zones.jungle, dragged)
+    engine.drawZone(state.zones.territory_right, dragged)
+    -- Ennemis RAGE du centre vers l'extérieur
+    drawEnemies(state.enemies_left,  "left",  LAYOUT_UPPER_Y)
+    drawEnemies(state.enemies_right, "right", LAYOUT_UPPER_Y)
+    -- Compteur ennemis (uniquement si ennemis présents)
+    if #state.enemies_left > 0 then
+        love.graphics.setColor(0.9, 0.4, 0.4)
+        love.graphics.printf("Ennemis " .. #state.enemies_left,
+            L.ENEMY_LEFT_X, LAYOUT_UPPER_Y + LAYOUT_UPPER_H + 2, L.ENEMY_LEFT_W, "left")
+    end
+    if #state.enemies_right > 0 then
+        love.graphics.setColor(0.9, 0.4, 0.4)
+        love.graphics.printf("Ennemis " .. #state.enemies_right,
+            L.ENEMY_RIGHT_X, LAYOUT_UPPER_Y + LAYOUT_UPPER_H + 2, L.ENEMY_RIGHT_W, "right")
+    end
+    love.graphics.setColor(1, 1, 1)
 
     for _, name in ipairs({ "trophies", "tableau", "deck", "discard", "hand" }) do
         engine.drawZone(state.zones[name], dragged)
     end
+
+    -- Draw cave zone with status label
+    engine.drawZone(state.zones.cave)
+    local cave = state.zones.cave
+    local cave_label = #cave.cards > 0 and "1 carte" or "Vide"
+    love.graphics.printf("Grotte: " .. cave_label, cave.x, cave.y + cave.h + 4, cave.w, "center")
+
+    -- Draw totem zone with count
+    engine.drawZone(state.zones.totem)
+    local totem = state.zones.totem
+    love.graphics.printf("Totems: " .. #totem.cards, totem.x, totem.y + totem.h + 4, totem.w, "center")
+
+
+    -- Draw clickable activate buttons for each totem card
+    for i, card in ipairs(state.zones.totem.cards) do
+        local btn_x = totem.x
+        local btn_y = totem.y + (i - 1) * 40
+        local btn_w = totem.w
+        local btn_h = 32
+
+        if card.activated then
+            -- Greyed out
+            love.graphics.setColor(0.4, 0.4, 0.4, 0.6)
+            love.graphics.rectangle("fill", btn_x, btn_y, btn_w, btn_h, 4)
+            love.graphics.setColor(0.7, 0.7, 0.7)
+            love.graphics.printf(card.name .. " (used)", btn_x, btn_y + 6, btn_w, "center")
+        else
+            -- Active / clickable
+            love.graphics.setColor(0.2, 0.4, 0.2)
+            love.graphics.rectangle("fill", btn_x, btn_y, btn_w, btn_h, 4)
+            love.graphics.setColor(1, 1, 0.8)
+            love.graphics.printf(card.name .. " [Activer]", btn_x, btn_y + 6, btn_w, "center")
+        end
+    end
+    love.graphics.setColor(1, 1, 1)
+
+
+
+    -- Draw egg bank with remaining count
+    engine.drawZone(state.zones.egg_bank)
+    local egg_zone = state.zones.egg_bank
+    love.graphics.printf("Oeufs: " .. #state.egg_bank, egg_zone.x, egg_zone.y + egg_zone.h + 4, egg_zone.w, "center")
+
+
 
     local btn_x, btn_y, btn_w, btn_h = LAYOUT_SIDE_X, LAYOUT_BTN_Y, LAYOUT_BTN_W, LAYOUT_BTN_H
     engine.drawButton("Fin de Tour", btn_x, btn_y, btn_w, btn_h,
@@ -1022,6 +1621,80 @@ function drawGame()
     if dragged then
         engine.drawCard(dragged, true)
     end
+
+    -- Draw action selection popup when a clan card is pending activation
+    if state.pending_activation and state.pending_actions then
+        local popup_x, popup_y = 500, 250
+        local btn_w, btn_h = 200, 36
+
+        -- Semi-transparent background overlay
+        love.graphics.setColor(0, 0, 0, 0.5)
+        love.graphics.rectangle("fill", popup_x - 10, popup_y - 40,
+                                btn_w + 20, #state.pending_actions * (btn_h + 6) + 50)
+
+        -- Popup title showing the selected card's name
+        love.graphics.setColor(1, 1, 0.6)
+        love.graphics.printf("Activer: " .. (state.pending_activation.name or "?"),
+                            popup_x, popup_y - 30, btn_w, "center")
+
+        -- Draw one button per available action
+        for i, action in ipairs(state.pending_actions) do
+            local btn_y = popup_y + (i - 1) * (btn_h + 6)
+            love.graphics.setColor(0.25, 0.35, 0.25)
+            love.graphics.rectangle("fill", popup_x, btn_y, btn_w, btn_h, 4)
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.printf(action.label, popup_x, btn_y + 8, btn_w, "center")
+        end
+    end
+
+
+    -- Draw action card selection popup (for Support)
+    if state.selecting_action_card and state.action_card_choices then
+        local popup_x, popup_y = 500, 250
+        local btn_w, btn_h = 200, 36
+
+        love.graphics.setColor(0, 0, 0, 0.5)
+        love.graphics.rectangle("fill", popup_x - 10, popup_y - 40,
+                                btn_w + 20, #state.action_card_choices * (btn_h + 6) + 50)
+
+        love.graphics.setColor(1, 1, 0.6)
+        love.graphics.printf("Choisir une carte Action:",
+                            popup_x, popup_y - 30, btn_w, "center")
+
+        for i, c in ipairs(state.action_card_choices) do
+            local btn_y = popup_y + (i - 1) * (btn_h + 6)
+            love.graphics.setColor(0.25, 0.25, 0.4)
+            love.graphics.rectangle("fill", popup_x, btn_y, btn_w, btn_h, 4)
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.printf(c.name or "?", popup_x, btn_y + 8, btn_w, "center")
+        end
+    end
+
+    -- Draw FORM_AMI partner selection popup
+    if state.selecting_ami_partner and state.ami_partner_choices then
+        local popup_x, popup_y = 500, 250
+        local btn_w, btn_h = 200, 36
+
+        love.graphics.setColor(0, 0, 0, 0.5)
+        love.graphics.rectangle("fill", popup_x - 10, popup_y - 40,
+                                btn_w + 20, #state.ami_partner_choices * (btn_h + 6) + 50)
+
+        love.graphics.setColor(0.6, 1, 0.7)
+        local init_name = state.ami_initiator and state.ami_initiator.name or "?"
+        love.graphics.printf("Paire avec " .. init_name .. ":",
+                            popup_x, popup_y - 30, btn_w, "center")
+
+        for i, c in ipairs(state.ami_partner_choices) do
+            local btn_y = popup_y + (i - 1) * (btn_h + 6)
+            local cdb = config.get_card(c.id)
+            love.graphics.setColor(0.15, 0.35, 0.2)
+            love.graphics.rectangle("fill", popup_x, btn_y, btn_w, btn_h, 4)
+            love.graphics.setColor(1, 1, 1)
+            local side_label = cdb and ("[" .. (cdb.ami_side or "?") .. "] ") or ""
+            love.graphics.printf(side_label .. (c.name or "?"), popup_x, btn_y + 8, btn_w, "center")
+        end
+    end
+
 end
 
 -- ============================================================
@@ -1037,6 +1710,9 @@ function drawHand()
         for _, c in ipairs(deck.cards) do c.face_up = false end
         engine.shuffle(deck)
     end
+
+    -- Reset totem activation for the new turn
+    solo.activate_totems_start_of_turn(state)
 
     engine.dealCards(deck, hand, config.hand_size)
 
@@ -1110,20 +1786,72 @@ end
 function attackCreature(creature, pile)
     local total = state.strength + state.resources.dino_tokens.current
     if total >= creature.hp then
-        state.score    = state.score + creature.points
-        addResource("food", creature.reward_food)
+        state.score = state.score + creature.points
         state.resources.dino_tokens.current = 0
         state.strength = 0
-        -- Déplacer le dino vaincu vers la zone Trophées
+
+        local db = config.get_card(creature.id)
+        local parts = { creature.name .. " vaincu !" }
+
+        -- Nourriture
+        local food = creature.reward_food or 0
+        if food > 0 then addResource("food", food); table.insert(parts, "+" .. food .. " Nourrit.") end
+
+        -- Pions Ami
+        local ami = db and (db.reward_ami or 0) or 0
+        if ami > 0 then addResource("ami", ami); table.insert(parts, "+" .. ami .. " Ami") end
+
+        -- Jetons Dino
+        local dino_tok = db and (db.reward_dino_tokens or 0) or 0
+        if dino_tok > 0 then addResource("dino_tokens", dino_tok); table.insert(parts, "+" .. dino_tok .. " Dino") end
+
+        -- Œufs
+        local eggs = db and (db.reward_eggs or 0) or 0
+        if eggs > 0 then solo.gain_egg(state, eggs); table.insert(parts, "+" .. eggs .. " oeuf(s)") end
+
+        -- Détruire des cartes (obligatoire)
+        local to_destroy = db and (db.reward_destroy_cards or 0) or 0
+        local destroyed = 0
+        for _ = 1, to_destroy do
+            if #state.zones.tableau.cards > 0 then
+                table.remove(state.zones.tableau.cards)
+                engine.layoutZone(state.zones.tableau)
+                destroyed = destroyed + 1
+            elseif #state.zones.hand.cards > 0 then
+                table.remove(state.zones.hand.cards)
+                engine.layoutZone(state.zones.hand)
+                destroyed = destroyed + 1
+            end
+        end
+        if destroyed > 0 then table.insert(parts, "-" .. destroyed .. " carte(s)") end
+
+        -- Cartes du territoire adjacent
+        local hunt = db and (db.reward_hunt_cards or 0) or 0
+        if hunt > 0 and pile then
+            local adj = (pile == state.dino_piles[1]) and state.zones.territory_left or state.zones.territory_right
+            local taken = 0
+            for _ = 1, hunt do
+                if #adj.cards > 0 then
+                    local c = table.remove(adj.cards, #adj.cards)
+                    c.face_up = false
+                    engine.addCard(state.zones.discard, c)
+                    taken = taken + 1
+                end
+            end
+            engine.layoutZone(adj)
+            if taken > 0 then table.insert(parts, "+" .. taken .. " carte(s) chasse") end
+        end
+
+        -- Déplacer le dino vaincu vers Trophées
         if pile then
             engine.removeCard(pile.zone, creature)
             creature.face_up = true
             engine.addCard(state.zones.trophies, creature)
-            -- Révéler le prochain dino de la pile
             local new_top = #pile.zone.cards > 0 and pile.zone.cards[#pile.zone.cards] or nil
             if new_top then new_top.face_up = true end
         end
-        -- Vérifier victoire (toutes les piles vides)
+
+        -- Vérifier victoire
         local all_clear = true
         for _, p in ipairs(state.dino_piles) do
             if #p.zone.cards > 0 then all_clear = false; break end
@@ -1132,7 +1860,7 @@ function attackCreature(creature, pile)
             state.game_over = true
             state.message   = "Tous les dinos vaincus ! Score : " .. state.score
         else
-            state.message = creature.name .. " vaincu ! +" .. creature.points .. " pts"
+            state.message = table.concat(parts, " | ")
         end
     else
         state.message = creature.name .. " : il faut " .. creature.hp .. " ATK. Vous avez " .. total
@@ -1154,9 +1882,25 @@ function buyCard(card, from_zone)
     end
 end
 
+  
+
+
 function endTurn()
     if state.game_over then return end
 
+    -- End the turn
+    solo.end_turn(state)
+
+    -- Trigger RAGE animation if RAGE just fired
+    if state.rage_active or (state.message and state.message:find("RAGE")) then
+        state.rage_timer = 1.0
+    end
+
+    -- Reset cave selection
+    state.pending_cave_card = nil
+
+
+        --[[
     engine.moveAllCards(state.zones.hand, state.zones.discard)
 
     local keep = {}
@@ -1174,19 +1918,40 @@ function endTurn()
     state.strength = 0
     state.turn     = state.turn + 1
 
+
+    -- Victory check: are all dinos defeated?
     local all_defeated = true
-    for _, c in ipairs(state.zones.creatures.cards) do
-        if not c.defeated then all_defeated = false end
-    end
-    if all_defeated then
-        state.game_over = true
-        state.message   = "Toutes les créatures vaincues ! Score : " .. state.score
-        return
+    for _, pile in ipairs(state.dino_piles) do
+        for _, card in ipairs(pile.zone.cards) do
+            if not card.defeated then
+                all_defeated = false
+                break
+            end
+        end
+        if not all_defeated then break end
     end
 
-    drawHand()
-    state.message = "Tour " .. state.turn .. " — Glisse des cartes sur le Tableau, clique les créatures pour attaquer"
+    if all_defeated then
+        state.game_over = true
+        state.message = "Toutes les creatures vaincues ! Score : " .. state.score
+        return
+    end
+     --]]
+
+     --[[ drawHand()
+    state.message = "Tour " .. state.turn .. " — Glisse des cartes sur le Tableau, clique les créatures pour attaquer" 
+
+    -- Deal a new hand
+    engine.dealCards(state.zones.deck, state.zones.hand, config.hand_size)
+
+    -- Reset totem activation for the new turn
+    solo.activate_totems_start_of_turn(state)
+
+    state.message = "Tour " .. state.turn .. " — Nouvelle main distribuee."
+    --]]
 end
+
+
 
 -- ============================================================
 -- Saisie du nom (pour les high scores — prêt à être branché)

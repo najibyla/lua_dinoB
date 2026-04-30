@@ -287,6 +287,20 @@ powers["slayar_destroy_for_force"] = function(gs, card)
     return true
 end
 
+-- Ami : +1 Pion Ami
+powers["ami_gain_ami"] = function(gs, card)
+    gs.ami     = gs.ami + 1
+    gs.message = "Ami : +1 Pion Ami."
+    return true
+end
+
+-- Bananar : +1 Nourriture
+powers["bananar_gain_food"] = function(gs, card)
+    gs.food    = gs.food + 1
+    gs.message = "Bananar : +1 Nourriture."
+    return true
+end
+
 -- ── Pouvoirs non encore implémentés (stubs) ──────────────────────────────────
 
 powers["amazar_dino_food"]           = function(gs) gs.message = "[Amazar] TODO: pouvoir à implémenter."; return false end

@@ -1,0 +1,370 @@
+Dinoblivion est un jeu de deck building , du tableau building, de la gestion de ressources, il y a des cartes à usage multiple
+
+contexte du jeu, on incarne un clan primitif, dans une époque où les humains coexistent avec les dinosaures
+notre clan arrive sur une nouvelle terre en meme temps q'un autre clan, c'est jeu de duel
+
+le but du jeu est d'assurer notre domination sur l'autre joeur en accumulant des points de victoires:
+
+- develper le clan (de nouveaux bébés) (2 points en fin de partie)
+- batir des totems (1 point en fin de partie)
+- tuer des dinosaurs (1 point en fin de partie)
+- capturer les oeufs de dinosaurs (points de surprises en fin de partie)
+
+mise en place:
+
+placer les plateau joueurs en face des 2 joueurs 
+plateau principal entre les 2 joueurs
+placer tous les jetons oeufs (24 en tout) face cachée (image de l'oeuf visible) entre les plateau joueurs (ils forment une banque d'oeufs)
+	- 4 dino bleu indestructible (2 points en fin de partie) 
+	- 8 dino rouge (2 points en fin de partie)
+	- 12 dino vert (1 point en fin de partie)
+
+au dessus des plateau joueurs, placez une banque de reserves constituée des ressources suivantes:
+6 pions ami (max)
+6 nourriture (max)
+6 jetons dino (max)
+
+puis depuis cette banque de reseves, depalcer les ressources suivantes vers la reseve du joueur sur la partie haute du plateau joeur (ressources de départ = 2 pion ami, 2 nourriture, 0 jeton dino, 0 oeufs)
+- 2x pion ami
+- 1 jeton nourriture face 2 visible 
+
+
+(choix du premier joueur selon le livret des regles)
+chaque joeurs jette ces 6 pions amis
+on compte le nombre de pion ami qui est debout sur les pieds
+celui qui en a le plus recoit le marqueur premier joeur (carte massue),
+spawner la pile de cartes des x5 chefs de clan sur la table de jeu
+puis mélanger la pile de chefs de clan (5 cartes) face cachée, tirer les 2 cartes du dessus et les poser devant le premier joueur face visible
+le premier joueur choisi une carte chef de clan parmi les deux cartes proposées, 
+celle qu'il a choisie rejoint son deck de départ
+l'autre carte retourne au deck de chefs de clans (comporte maintenant 4 cartes)
+on mélange le deck des cartes de chef de clans, on tire les 2 cartes du dessus et on les pose devant le second joueur face visible 
+le second joueur choisi une carte chef de clan parmi les deux cartes proposées,
+celle qu'il a choisie part dans son deck de départ
+l'autre carte retourne au deck de chef de clans (comporte maintenant 3 cartes) - on peut retirer ces cartes du jeu à ce stade
+---
+la massue sert également de rappel, si le premier joueur termine la partie, le second joueur doit également jouer une dernière fois avant le decompte des scores
+placer la carte score à droite du plateau joueur
+
+
+choisir son clan de départ : (pas de cout d'achat pour les cartes de clan de départ)
+piles de cartes identiques (9 cartes) à placer sur le (coté jour) (encadré gauche) du plateau du joueur
+la défausse est (l'encadrée droit) du plateau du joueur appelé (coté nuit)
+- Ami (1)		force=0, type=action, 	reward_action= +1 pion ami
+- Dinoblivion (1)	force=0, type=action, 	reward_action={ chaque jeton dino = +2 force (max 6 jetons dino) }
+- Fructam (1)		force=0, type=action, 	reward_action={ +2 nourriture ou piocher +2 cartes}
+- Bananar (3)		force=0, type=clan, 	reward_action={ +1 nourriture}, emplacement_demi_ami=droite 
+- Explorar (3)		force=1, type=clan, 	reward_action=non, emplacement_demi_ami=gauche 
+
+choisir son chef de clan parmi les 5 cartes suivantes: (pas de cout d'achat pour les cartes chefs)
+- Bobor (1)	force = 1, cout_achat=0, reward_action=( detruire une carte en main ={ +2 pion ami}, emplacement_demi_ami=droite 
+- Cornio (1)	force = 2, cout_achat=0, reward_action=( detruire une carte en main = +3 nourriture), emplacement_demi_ami=droite 
+- Magda (1)	force = 2, cout_achat=0, reward_action=( detruire une carte en main = +2 jeton dino), emplacement_demi_ami=gauche 
+- Sillia (1)	force = 3, cout_achat=0, reward_action=( detruire une carte en main ={ +1 jeton dino, +1 nourriture}), emplacement_demi_ami=gauche 
+- Slayar (1)	force = 2, cout_achat=0, reward_action=( detruire une carte en main = +4 force), emplacement_demi_ami=droite 
+
+
+les cartes en main sont les cartes en main + carte dans la grotte + les cartes jouées dans la zone à droite du plateau joeur (activer le pouvoir du chef de clan implique la desctruction d'une carte en jeu (retirer du jeu) avant d'obtenir le reward)
+ 
+placer la carte chef de clan choisie sur le deck de départ (cartes clan) puis mélangez les, 
+placer le deck sur le coté jour encadré de gauche sur le plateau joueur
+
+
+
+mise en place du plateau principal:
+retirer les cartes ennemi (cartes rouge du jeu) utilisable uniquement en mode solo
+- Cannibalar (1)
+- Cultist (1)
+- Piranar (1)
+- Coconar (1)
+
+pour le mode duel:
+cartes dinosaures level 2
+
+- Allosaurus (x2)	force=16, reward_dino = { -1 carte en jeu, +1 carte au choix de la zone de chasse adjascente à l'emplacement du dino vaincu +1 pion ami, +1 oeuf}
+- Brachiosaurus (x1)	force=17, reward_dino = { -1 carte en jeu, +3 oeufs}
+- Parasaurolophus (x1)	force=17, reward_dino = { -1 carte en jeu, +2 pions ami, +2 oeufs}
+- Spinosaurus (x1)	force=18, reward_dino = { -1 carte en jeu, +1 carte au choix de la zone de chasse adjascente à l'emplacement du dino vaincu, on ne mélange pas les cartes, +2 oeufs}
+- Triceratops (x1)	force=18, reward_dino = { -2 carte en jeu, +3 carte au choix de la zone de chasse adjascente à l'emplacement du dino vaincu}
+- Tyrannosaurus (x2)	force=19, reward_dino = { -1 carte en jeu, +1 carte au choix de la zone de chasse adjascente à l'emplacement du dino vaincu, on ne mélange pas les cartes, +2 oeufs}
+
+cartes dinosaures level 1
+
+- Pterodactyle (x1)	force=7,  reward_dino = { -1 carte en jeu, +1 pion ami, +1 oeuf}
+- Compsognathus (x1)	force=7,  reward_dino = { -1 carte en jeu, +1 oeufs, +2 jetons dino}
+- Stegosgurus (x2)	force=8,  reward_dino = { -1 carte en jeu, +2 oeufs}
+- Dilophosaurus (x1) 	force=9,  reward_dino = { -1 carte en jeu, +1 carte au choix de la zone de chasse adjascente à l'emplacement du dino vaincu, on ne mélange pas les cartes, +1 pion ami}
+- Ankylosaurus (x1)	force=9,  reward_dino = { -1 carte en jeu, +1 carte au choix de la zone de chasse adjascente à l'emplacement du dino vaincu, +2 nourritures}
+- Raptor (x2)		force=10, reward_dino = { -1 carte en jeu, +1 carte au choix de la zone de chasse adjascente à l'emplacement du dino vaincu, +1 oeuf}
+
+
+
+
+
+
+
+
+
+placer (face cahcée ) 3 des 8 cartes dinosaurs de niveau 2 préalablement mélangés sur chacun des deux emplacements en haut à droite et en haut à gauche du plateau principal (en paysage),
+placez par dessus chacune de ces 2 piles; 3 des 8 cartes dinosaurs de niveau 1 préalablement mélangés (face cachée), puis reveler la première carte, c'est le premier dinosaur à combattre.
+
+mélanger les cartes clan grises et les cartes actions brunes, et placez les à l'emplacement jungle (pioche commune) au mileu du plateau principal
+des deux cotés de la jungle, et en dessous de chaque emplacement de dinosaurs, se trouvent 2 zones 
+
+
+
+## Cartes Action brunes: (cout achat en nourriture) type=action, 
+pour etre jouée, les cartes de type action ont besoin d'une carte clan x42
+
+- Monki (1)		add_nouritture= 1, cout_achat= x3 nourriture, totem=1, carte_unique=oui, reward_action={ jouer carte action brune} 
+- Banana Boost (1)	add_nouritture= 1, cout_achat= x2 nourriture, totem=0, carte_unique=oui, reward_action={ +4 nourriture}
+- Capturar (3)		add_nouritture= 1, cout_achat= x2 nourriture, totem=0, carte_unique=non, reward_action={ +2 jeton dino}
+- Dino Farm (3)		add_nouritture= 2, cout_achat= x5 nourriture, totem=1, carte_unique=non, reward_action={ +1 nourriture ou +1 jeton dino}
+- Dino Tool (3)		add_nouritture= 1, cout_achat= x4 nourriture, totem=1, carte_unique=non, reward_action={ detruire x1 jeton dino = piocher +2 carte}
+- Fiyar (3)		add_nouritture= 2, cout_achat= x5 nourriture, totem=1, carte_unique=non, reward_action={ pioche +1 carte}
+- Hut (3)		add_nouritture= 1, cout_achat= x4 nourriture, totem=1, carte_unique=non, reward_action={ +1 pion ami}
+- Mammotar (3)		add_nouritture= 1, cout_achat= x3 nourriture, totem=1, carte_unique=non, reward_action={ detruire x2 nourriture = +4 force}
+- Rotam (3)		add_nouritture= 2, cout_achat= x4 nourriture, totem=0, carte_unique=non, reward_action={ +5 force}
+- Stellar (3)		add_nouritture= 1, cout_achat= x2 nourriture, totem=0, carte_unique=non, reward_action={+1 nourriture, +1 jeton dino, +1 pion ami}
+- Tigar (3)		add_nouritture= 1, cout_achat= x2 nourriture, totem=1, carte_unique=non, reward_action={+1 force}
+- Totem (3)		add_nouritture= 2, cout_achat= x6 nourriture, totem=3, carte_unique=non, reward_action=no
+- Troc (3)		add_nouritture= 2, cout_achat= x6 nourriture, totem=0, carte_unique=non, reward_action={+1 oeuf, +2 pion ami}
+- Yak (3)		add_nouritture= 1, cout_achat= x2 nourriture, totem=1, carte_unique=non, reward_action={+1 nourriture}
+- Yolo (3)		add_nouritture= 1, cout_achat= x3 nourriture, totem=0, carte_unique=non, reward_action={+1 jeton dino, piocher +2 cartes}
+
+## Cartes Clan grises: (cout achat en pion ami) type=clan
+
+
+- Zazza (1)		force = 3, cout_achat= x2 pions ami, emplacement_demi_ami=gauche, carte_unique=oui, reward_action={ -2 pion ami = +8 force}
+- Ayla (1)		force = 0, cout_achat= x2 pions ami, emplacement_demi_ami=both,   carte_unique=oui, reward_action=no, reward_si_new_ami={si l'autre carte possede emplacement_demi_ami=gauche => +1 oeuf, si l'autre carte possede emplacement_demi_ami=gauche => +1 pion ami}
+- Dino Ridar (1)	force = (nombre de jeton ouefs possédé par le joueur), 		  cout_achat= x2 pions ami, emplacement_demi_ami=droite, carte_unique=oui, reward_action=no
+- Mom (3)		force = (nombre de carte clan en jeu, carte mom y compris),	  cout_achat= x3 pions ami, emplacement_demi_ami=gauche, carte_unique=non, reward_action=no
+- Protectar (3)		force = (nombre de totem en jeu coté joeur),			  cout_achat= x2 pions ami, emplacement_demi_ami=droite, carte_unique=non, reward_action=no
+- Gogo (3)		force = 3, cout_achat= x3 pions ami, emplacement_demi_ami=both,   carte_unique=non, reward_action=no, reward_si_new_ami= piocher +2 cartes
+- Amazar (3)		force = 2, cout_achat= x2 pions ami, emplacement_demi_ami=gauche, carte_unique=non, reward_action={ +1 jeton dino, +1 nourriture} 
+- Artis (3)		force = 0, cout_achat= x1 pions ami, emplacement_demi_ami=droite, carte_unique=non, reward_action={ jouer carte action brune + pioche +1 carte} 
+- Dominatar (3)		force = 2, cout_achat= x2 pions ami, emplacement_demi_ami=gauche, carte_unique=non, reward_action={ detruire x2 jeton dino = +7 force}
+- Gilir (3)		force = 1, cout_achat= x1 pions ami, emplacement_demi_ami=gauche, carte_unique=non, reward_action={ +1 jeton dino} 
+- Huntar (3)		force = 3, cout_achat= x2 pions ami, emplacement_demi_ami=gauche, carte_unique=non, reward_action=no, 
+- Kraf Dinar (3)	force = 2, cout_achat= x3 pions ami, emplacement_demi_ami=gauche, carte_unique=non, reward_action={ +2 jeton dino} 	 
+- Neandertar (3)	force = 4, cout_achat= x3 pions ami, emplacement_demi_ami=droite, carte_unique=non, reward_action={ -1 oeuf du joueur adverse en mode duel seulement, le joueur choisi un oeuf parmi ceux de l'adversaire, mais ne voit pas sa valeur} 
+- Patrak (3)		force = 2, cout_achat= x1 pions ami, emplacement_demi_ami=droite, carte_unique=non, reward_action={ -1 nourriture = +3 force} 
+- Shaman (3)		force = 1, cout_achat= x1 pions ami, emplacement_demi_ami=droite, carte_unique=non, reward_action={ si 4+ totem en jeu = +1 oeuf}  
+- Workar (3)		force = 2, cout_achat= x2 pions ami, emplacement_demi_ami=droite, carte_unique=non, reward_action={ permet de jouer 2 cartes action brunes à la fois} 
+
+
+
+déroulement d'un tour de dinoblivion
+piocher 4 cartes de votre deck de départ,
+on vérifie qu'il reste au moins une carte de deck dans le coté jour (coté gauche) du plateau du joueur
+si ce n'est pas le cas on a atteind la RAGE
+
+la phase rage des dinosaures consiste à dévoiler 1 ou 2 cartes depuis le deck jungle dans les deux emplacement de chasse (à droite et à gauche)
+le nombre de carte à dévoiler dépend du niveau du dinosaur face visible au dessus de l'emplacement de chasse
+si le dino est un dino niveau 1, devoiler une carte
+si le dino est un dino niveau 2, devoiler x2 carte, l'une après l'autre.
+
+si en fin de rage le joeur à encore besoin de cartes pour que sa main aie 4 carte;
+on retourne les cartes de la défausse du plateau joueur,
+on deplace le packet de deck de la zone defausse, coté nuite coté droit de plateau joueur, vers la zone coté jour coté gauche du plateau joueur (emplacement où le deck de départ a spawné autout début du jeu)
+puis pioche le nombre de carte qui lui manque , pour qu'il ait 4 cartes en main
+
+utiliser toutes les actions que vous pouvez réaliser en fonction des ressources présentes sur la reserve du plateau du joueur
+
+placer les ressources récupérée dans le reservoir du plateau du joueur, et si c'est un oeuf, le placer dans la zone à gauche du plateau joueur face cachée,
+l'oeuf y reste et permet de gagner des points en fin de partie, ce n'est qu'en fin de partie qu'on devoile les faces visibles des oeufs et on additionne les points y figurant (1 point ou 2 points par oeuf)
+
+les cartes clan grises ont la possibilité de faire 5 actions : voir le livre des regles
+il faut (retourner la carte à 90°) pour pouvoir l'activer et jouer l'une des 5 actions possibles
+1-gagner le pouvoir unique de la carte reward_action (les objets gagnés sont placés dans la reserve sur le plateau joeur , ou à gauche du plateau joueur s'il s'agit d'oeufs)
+2-activer une carte grise (sans gagner le pouvoir) pour pouvoir jouer une carte action en main (c'est la seule facon d'obtenir le reward des cartes d'action brune; activer une carte clan grise en dessous de clle ci
+dis autrement, pour gagner reward_action d'une cartes action brune, il faut activer une carte caln grise (mais sans gagner reward_action de la carte clan grise)
+placement sur la partie droite du jeu:
+carte grise activée (retournée à 90°) sur la quelle deposer la carte action brune que l'on veut activer (on ne la retourne pas à 90°, on la pose juste au dessus de la carte clan grise) puis on recupère le  reward_action de la carte action brune
+si la carte action brune possede un totem (en activant une carte clan grise sans prendre son reward) les cartes totem activée sont placée dans la zone à gauche du plateau du joueur, et en fin de tour, elles y restent, elle ne partent pas en défausse
+3-unir 2 emplacement_demi_ami différentes (droite + gauche) ou (both + droite) ou (both + gauche), (both + both dans le cas de 2 cartes gogo = 1 pion ami + piocher 4 cartes) et obtenir reward_si_new_ami si une carte avec emplacement_demi_ami=both est impliquée
+4-chasser, pivoter la carte clan à jour de 90° , ne pas gagner de reward,
+le nombre de force de la carte correspond au nombre de carte à révéler du deck jungle,
+ces carte (1 ou plus) sont retournées face visible une à une, et sont déposée soit à droite de la jungle, soit à gaucher de la jungle, c'est le joeur qui décide de l'endroit de chasse,
+pour chaque carte action brune révélée, le joueur recupère le total de add_nouritture de ces cartes dévoilées
+les cartes du haut de ces deux piles (à droite et à gacuhe de la jungle) constitue le marché,
+ces cartes peuvent être achetées tant que le joueue possede des ressources suffisante, l'achat de cartes n'eest pas considéré comme action,
+le cout d'une carte est payé soit par pion ami si c'est une carte clan grise, soit payée par nourriture si c'est une carte action brune
+la carte achetée est placée dans la défausse du plateau joueur(coté droit) coté nuit
+5-vaincre l'un des deux dinausaures sur le plateau principal,
+pour vaincre un dino, le joueur doit avoir cumuler une valeur de force égale ou supérieure à celle du dino
+et le joueur obtient reward_dino de la carte: des ressources + tous les combats avec un dino implique la destruction de (1 ou 2) carte en jeu (meme si elle a été jouée ou activée)
+la carte dino vaincue est placée dans la zone à gauche du plateau du joeur , et en fin de partie chaque dino va valoir un point dans le score final
+si une carte ne peut pas etre jouée (pas assez de ressource pour l'activer), on peut la mettre dans la grotte (en fin de tour, cetta carte reste dans l'emplcement grotte audessus du plateau joueur, et ne retourne pas à la défausse
+on peut à tout moment placer une carte en main dans la grotte et recupérer celle qui s'y trouve (echange), la grotte ne peut accueillir qu'une seule carte à la fois.
+
+nb:
+les cartes totem 
+
+si le joueur ne plus plus faire d'actions, les cartes jouées sont placées dans la défausse coté nuit ou coté droit du plateau du joueur
+sauf la carte mise dans la grotte, et les cartes action totem activées qui sont placées à gauche du plateau du joueur, ces cartes totem sont remises à l'endroit pour indiquer qu'elle peuvent à nouveau etre activer au prochain tour
+les cartes action (avec totem) placés dans la zone à gauche du plateau joueurs n'ont plus besoin d'une carte clan grise pour etre activée, 
+on les active à chaque tour(retournée à 90° et on gagne son reward_action) , puis en fin de tour elle sont remise en position inactive 0° 
+
+le premier joueur pioche a nouveau 4 cartes, 
+check s'il declenche une rage
+puis c'est le tour le tour du second joeur  - le second joueur effectue les memes actions que le premier joueur-
+
+
+
+la fin de partie est déclenché lorsque l'un des emplacement suivants sur le plateau central est vide:
+- soit l'un des emplacement des dinosaurs
+- soit l'emplacement des cartes jungle
+
+
+comptabiliser les score de fin:
+recupérer les cartes de deck joeur, de sa main, de sa défausse, de la grotte, et des cartes totems placés dans la zone à gauche du plateau joeur, et les cartes dinosaurs que vous avez battu
+pour chaque couple formé => +2 points
+placer les cartes sur la table pour former le symbole ami emplacement_demi_ami différentes (droite + gauche) (gauche + both + droite)
+les cartes gogo et ayla peuvent former 2 famille chacune
+les cartes restantes qui ne forment pas un couple sont dites célibataires et ne scorent pas de point
+
+pour chaque symbole totem activé dans la zone gauche de votre plateau joueur => +1 point (les totems dans la défausse qui n'ont pas été activé ne rentrent pas dans le score de fin de partie.
+
+pour chque carte dino dans la zone gauche de votre plateau joueur => +1 point
+faire eclore ses oeufs, retourner les oeufs face visible et ajoute la somme au score , chaque oeuf vaut soit 1 point soit 2 points
+
+
+
+
+
+=====
+regles du mode solo:
+=====
+
+le but du jeu en mode solo est ;
+éliminier tous les dinosaures du plateau principal (zone de gauche, et zone de droite)
+
+condition de défaite:
+si l'on arrive au bout du deck jungle au centre du plateau principal, le volcan rentre en éruption et tue notre clan, nous avons perdu
+
+mise en place de la partie
+placer le plateau joueur (mode solo) en face du joueur
+spawner les 24 jetons oeufs sur la table, melanger les face cachée, puis prenez en 12 oeufs, placez les dans la la banque d'oeufs
+
+dans la banque de reserve au dessus du plateau joeur, placer
+3 jetons nourriture 
+6 jetons dino
+6 pions amis
+
+deplacer depuis cette reserve, les ressources suivantes vers la reserve du plateau joueur:
+1 jeton nourriture valeur 2 face visible
+2 pions ami
+
+choisissez un clan parmi les deux disponibles (soleil ou lune) (sun ou moon)
+placer le deck sur le coté jour du plateau du joueur
+choisissez un chef de clan parmi le deck des 5 chefs de clans 
+ajouter la carte du chef de clan au deck de départ precedement choisi
+melanger le deck de départ
+
+choisissez un niveau de difficulté:
+mélanger les cartes de la jungles (cartes clan grises + cartes action brunes)
+puis selon la difficulté retenez le nombre de cartes dans l'emplacement jungle au milieu du plateau central
+- cueilleur 	x40 cartes (facile)
+- chassuer 	x36 cartes
+- guerrier 	x32 cartes
+- chef 		28 cartes (difficile)
+
+et mettre les autres cartes jungle non choisies en haut du plateau principal, on en aura besoin plus tard pour en introduire quelques cartes dans le deck jungle (et eviter l'éruption du volcan et notre extinction)
+
+
+ajouter les 4 quartes ennemi au deck jungle sure le plateau principal, melanger le deck 3 fois
+
+
+
+faire apparaitre le pack de dino niveau 1 sur la table
+mélanger le deck des dinos de niveau 1
+piocher 4x dino niveau 1 du deck et placer les dans la zone gauche du plateau central
+reveler le dino du dessus
+detruisez les cartes non choisies
+
+faire apparaitre le pack de dino niveau 2 sur la table
+mélanger le deck des dinos de niveau 2
+piocher 3x dino niveau 2 du deck et placer les dans la zone droite du plateau central
+reveler le dino du dessus
+detruisez les cartes non choisies
+
+
+--
+on est pret à commencer le premier tour
+
+piocher 4 cartes du deck de départ et les placer en main
+
+jouer les différentes actions possibles en fonction de vos ressources disponibles, et jusqu'à ne plus pouvoir jouer de nouvelles actions
+si le deck de départ s'épuise, il révéle la rage des dinosaures
+dans ce cas on retourne un nombre de cartes égale au niveau de la carte dino depuis la junggle vers les trerritoires de chasse en dessous de chaque dino
+dans le mode solo 
+le terriroire de gauche va accullier 1 carte, (car dino niveau 1 au dessus) 
+et le territoire de droite va accueillir 2 cartes (car dino niveau 2 au dessus)
+
+
+lorsqu'on chasse, et qu'une carte ennemi est revélée depuis le deck jungle, 
+elle reste sans effet, elle est renvoyée sous le deck jaungle
+
+par contre si la carte ennemi est révélee après le declenchement de la rage (coté jour) du plateau joueur vide;
+alors dans ce cas, vous l'ajouter à coté plateau principal (meme coté que vous l'avez retourné (soit coté gauche, soit coté droit)
+et vous jouer immediatement l'effet de la carte ennemi = retourner une carte suplémentaire de la jungle du meme coté
+si un nouvel ennemi est revélé, le poser à coté du premier ennemi, que ce soit à gauche ou à droite, 
+(au total, on peut avoir jusqu'à 4 cartes l'une à coté de l'autre, soit du coté gauche du plateau principal, 
+soit su coté droit du plateau principal, soit 3 d'un coté et 1 de l'autre, soit 2 de chaque coté) selon ce qui a été révélé par le deck jungle 
+
+si vous declenchez la rage de nouveau, et qu'une ou plusieurs cartes ennemi est presente sur l'un des deux cotés, activer son effet immédiatement
+(retourner une carte suplémentaire de la jungle pour chaque carte ennemi presente dans les cotés, et placez là du meme coté que la carte ennemi)
+si par exemple 4 ennemis se trouve dans l'un des cotés du plateau principal, reveler un à un 4 cartes du deck jungle et les déposer vers le coté ou se trouve les ennemis
+
+
+
+rencontre des ennemis :
+- Cannibalar	condition_victoire={force_joueur = 3, -1 pion ami}
+- Cultist	condition_victoire={force_joueur = 4, détruire une carte en jeu}
+- Piranar	condition_victoire={force_joueur = 1, -1 jeton dino}
+- Coconar	condition_victoire={force_joueur = 2, -2 nourriture}
+
+si vous arrivez à vaincre une carte ennemi, on la remet dans le packet jungle, puis on le remélange le deck jungle
+
+si vous arrivez à vaincre un dinosaure, et que le reward est un oeuf, dans le mode solo, vous revéler un oeuf parmi les 12 pris au dapart (banque)
+la valeur indiqué sur l'oeuf indique le nombre de cartes à ajouter en dessous de la pile jungle parmi les cartes non utilisées que l'on a plcé au dessus du plateau central en début de partie
+
+
+
+si vous arrivez à vider l'une des piles de dinosaurs, cela ne declenche pas l'event (éruption volcnique) à cet instant, 
+il faut attendre, la prochaine rage, (coté jour) du plateau joeur qui se vide
+dans ce cas, on retourne x3 cartes depuis le deck junggle vers les territoires de chasse en dessous de la zone qui ne contient plus de dinosaurs
+
+
+Mode 3 ou 4 joueuers:
+=================
+supposon que l'on a 2 boites du jeu
+mélangez les cartes clan et actions des deux boites de jeu, incluant toute les cartes uiniques, pour former la jungle
+doublez les oeufs disponibles sur la table
+doublez les dinosaures de chaque type aux espcaes dinosaures
+a chacun son plateau joueur et vous etes pret à jouer
+
+
+
+
+
+
+
+
+
+cartes dinosaures level 2
+- Allosaurus (x2)
+- Brachiosaurus (x1)
+- Parasaurolophus (x1)
+- Spinosaurus (x1)
+- Triceratops (x1)
+- Tyrannosaurus (x2)
+
+cartes dinosaures level 1
+- Pterodactyle (x1)
+- Compsognathus (x1)
+- Stegosgurus (x2)
+- Dilophosaurus (x1)
+- Ankylosaurus (x1)
+- Raptor (x2)

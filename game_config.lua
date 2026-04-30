@@ -96,10 +96,10 @@ config.enemy_ids = { "piranar", "coconar", "cannibalar", "cultist" }
 
 -- Coûts d'élimination par ennemi (Force requise + ressource supplémentaire)
 config.enemy_costs = {
-    piranar    = { strength = 1, cost = { dino_tokens = 1 } },
-    coconar    = { strength = 2, cost = { food        = 2 } },
-    cannibalar = { strength = 3, cost = { ami         = 1 } },
-    cultist    = { strength = 4, cost = { destroy_card = 1 } },
+    piranar    = { force = 1, resource = "dino_tokens",  amount = 1 },
+    coconar    = { force = 2, resource = "food",         amount = 2 },
+    cannibalar = { force = 3, resource = "ami",          amount = 1 },
+    cultist    = { force = 4, resource = "destroy_card", amount = 1 },
 }
 
 -- ─────────────────────────────────────────────────────────────────────────────

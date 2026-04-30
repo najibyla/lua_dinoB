@@ -25,6 +25,28 @@ layout.BTN_Y   = 622 + 22        -- HAND_Y + 22 = 644
 layout.BTN_W   = 130
 layout.BTN_H   = 50
 
+-- New zone positions
+layout.CAVE_X = 1020
+layout.CAVE_Y = 220
+layout.CAVE_W = 110
+layout.CAVE_H = 155
+
+layout.TOTEM_X = 1140
+layout.TOTEM_Y = 50
+layout.TOTEM_W = 130
+layout.TOTEM_H = 320
+
+layout.EGG_X = 1020
+layout.EGG_Y = 50
+layout.EGG_W = 110
+layout.EGG_H = 60
+
+-- Zones ennemis RAGE — partent du centre (jungle) vers l'extérieur
+layout.ENEMY_LEFT_X  = 10   -- bord gauche des ennemis côté gauche
+layout.ENEMY_LEFT_W  = 310  -- largeur (10→320, juste avant territory_left)
+layout.ENEMY_RIGHT_X = 720  -- bord gauche des ennemis côté droit
+layout.ENEMY_RIGHT_W = 290  -- largeur (720→1010, juste après territory_right)
+
 -- ── Factory zones de jeu ──────────────────────────────────────
 -- Retourne la table state.zones complète avec toutes les zones engine.
 function layout.createGameZones()
@@ -34,10 +56,16 @@ function layout.createGameZones()
         hand            = engine.newZone(150,     L.HAND_Y,  700, L.HAND_H,  "fan",   "Main"),
         discard         = engine.newZone(870,     L.HAND_Y,  100, L.HAND_H,  "stack", "Défausse"),
         tableau         = engine.newZone(30,      L.TAB_Y,   940, L.TAB_H,   "row",   "Tableau"),
-        territory_left  = engine.newZone(10,      L.UPPER_Y, 420, L.UPPER_H, "row",   "Territoire"),
-        jungle          = engine.newZone(440,     L.UPPER_Y, 130, L.UPPER_H, "stack", "Jungle"),
-        territory_right = engine.newZone(580,     L.UPPER_Y, 420, L.UPPER_H, "row",   "Territoire"),
-        trophies        = engine.newZone(L.SIDE_X, L.DINO_Y, 230, 160,       "row",   "Trophées"),
+        territory_left  = engine.newZone(330, L.UPPER_Y, 120, L.UPPER_H, "stack", "Territoire"),
+        jungle          = engine.newZone(460, L.UPPER_Y, 120, L.UPPER_H, "stack", "Jungle"),
+        territory_right = engine.newZone(590, L.UPPER_Y, 120, L.UPPER_H, "stack", "Territoire"),
+        --trophies        = engine.newZone(L.SIDE_X, L.DINO_Y, 230, 160,       "row",   "Trophées"),
+        -- trophies        = engine.newZone(L.SIDE_X   , 410, 250, 60, "row", "Trophees"),
+        trophies = engine.newZone(380, L.DINO_Y, 250, L.DINO_H, "row", "Trophees"),
+
+        cave            = engine.newZone(L.CAVE_X, L.CAVE_Y, L.CAVE_W, L.CAVE_H, "stack", "Grotte"),
+        totem           = engine.newZone(L.TOTEM_X, L.TOTEM_Y, L.TOTEM_W, L.TOTEM_H, "stack", "Totems"),
+        egg_bank        = engine.newZone(L.EGG_X, L.EGG_Y, L.EGG_W, L.EGG_H, "stack", "Oeufs"),
     }
 end
 

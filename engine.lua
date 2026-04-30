@@ -144,6 +144,10 @@ function engine.moveAllCards(from, to)
     engine.layoutZone(to)
 end
 
+
+
+
+
 -- Check if a point is inside a rectangle
 function engine.pointInRect(px, py, rx, ry, rw, rh)
     return px >= rx and px <= rx + rw and py >= ry and py <= ry + rh
@@ -226,6 +230,38 @@ function engine.drawCard(card, dragging)
         love.graphics.setColor(0.35, 0.35, 0.55)
         love.graphics.rectangle("line", cx + 8, cy + 8, W - 16, H - 16, 4, 4)
     end
+
+
+    -- Draw activation indicator (90-degree rotation visual)
+--[[     if card.activated then
+        love.graphics.setColor(1, 0.8, 0, 0.7)
+        -- Draw a small rotated rectangle in the top-right corner
+        love.graphics.push()
+        love.graphics.translate(card.x + card.w - 14, card.y + 14)
+        love.graphics.rotate(math.rad(45))
+        love.graphics.rectangle("fill", -8, -4, 16, 8)
+        love.graphics.pop()
+        -- Draw ACT label
+        love.graphics.setColor(1, 0.9, 0.2)
+        love.graphics.printf("ACT", card.x, card.y + 2, card.w - 4, "right")
+        love.graphics.setColor(1, 1, 1)
+    end --]]
+
+    if card. activated then
+        local W = engine.CARD_W
+        love.graphics.setColor(1, 0.8 , 0, 0.7)
+        love.graphics.push()
+        love.graphics.translate(card.x + W - 14, card.y + 14)
+        love.graphics.rotate(math.rad(45))
+        love.graphics.rectangle("fill", -8, -4, 16 , 8)
+        love.graphics.pop()
+        
+        love.graphics.setColor(1, 0.9, 0.2 )
+        love.graphics.printf(" ACT", card.x, card.y + 2, W - 4, "right")
+        love.graphics.setColor(1, 1, 1)
+    end
+
+
 end
 
 
