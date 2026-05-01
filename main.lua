@@ -569,14 +569,7 @@ function love.mousepressed(mx, my, button)
                     if db_entry and db_entry.card_power then
                         local power_fn = card_powers[db_entry.card_power]
                         if power_fn then
-                            local gs = {
-                                food = state.resources.food.current,
-                                ami = state.resources.ami.current,
-                                dino_tokens = state.resources.dino_tokens.current,
-                                attack_force = state.strength,
-                                message = "",
-                                pending_draw = 0,
-                            }
+                            local gs = solo.build_power_state(state)
                             power_fn(gs, card)
                             if gs.pending_destroy then
                                 -- Chef power : montrer popup de sélection de carte à détruire
@@ -600,14 +593,7 @@ function love.mousepressed(mx, my, button)
                                 }
                                 state.message = gs.message
                             else
-                                state.resources.food.current = math.min(gs.food, state.resources.food.max)
-                                state.resources.ami.current = math.min(gs.ami, state.resources.ami.max)
-                                state.resources.dino_tokens.current = math.min(gs.dino_tokens, state.resources.dino_tokens.max)
-                                state.strength = gs.attack_force
-                                state.message = gs.message or state.message
-                                if (gs.pending_draw or 0) > 0 then
-                                    engine.dealCards(state.zones.deck, state.zones.hand, gs.pending_draw)
-                                end
+                                solo.apply_power_state(gs, state)
                             end
                         end
                     end
