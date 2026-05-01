@@ -505,6 +505,28 @@ function love.mousepressed(mx, my, button)
 
     elseif currentState == STATE.playing then
 
+        -- Popup : sélection de carte à détruire (pouvoir chef)
+        if state.pending_destroy then
+            local popup_x, popup_y = 300, 250
+            local btn_w, btn_h     = 260, 36
+            for i, entry in ipairs(state.pending_destroy.choices) do
+                local btn_y = popup_y + (i - 1) * (btn_h + 6)
+                if vx >= popup_x and vx <= popup_x + btn_w
+                and vy >= btn_y and vy <= btn_y + btn_h then
+                    engine.removeCard(entry.zone, entry.card)
+                    local r = state.pending_destroy.reward
+                    if r.food        > 0 then addResource("food",        r.food)        end
+                    if r.ami         > 0 then addResource("ami",         r.ami)         end
+                    if r.dino_tokens > 0 then addResource("dino_tokens", r.dino_tokens) end
+                    if r.force       > 0 then state.strength = state.strength + r.force end
+                    state.message        = state.pending_destroy.msg
+                    state.pending_destroy = nil
+                    return
+                end
+            end
+            return  -- clic hors popup → garder ouverte (sélection obligatoire)
+        end
+
         -- Handle clicks on the action selection popup
         if state.pending_activation and state.pending_actions then
             local popup_x, popup_y = 500, 250
@@ -556,13 +578,36 @@ function love.mousepressed(mx, my, button)
                                 pending_draw = 0,
                             }
                             power_fn(gs, card)
-                            state.resources.food.current = math.min(gs.food, state.resources.food.max)
-                            state.resources.ami.current = math.min(gs.ami, state.resources.ami.max)
-                            state.resources.dino_tokens.current = math.min(gs.dino_tokens, state.resources.dino_tokens.max)
-                            state.strength = gs.attack_force
-                            state.message = gs.message or state.message
-                            if (gs.pending_draw or 0) > 0 then
-                                engine.dealCards(state.zones.deck, state.zones.hand, gs.pending_draw)
+                            if gs.pending_destroy then
+                                -- Chef power : montrer popup de sélection de carte à détruire
+                                local choices = {}
+                                for _, c in ipairs(state.zones.hand.cards) do
+                                    table.insert(choices, { card = c, zone = state.zones.hand })
+                                end
+                                for _, c in ipairs(state.zones.tableau.cards) do
+                                    if c ~= card then
+                                        table.insert(choices, { card = c, zone = state.zones.tableau })
+                                    end
+                                end
+                                if #state.zones.cave.cards > 0 then
+                                    local cv = state.zones.cave.cards[#state.zones.cave.cards]
+                                    table.insert(choices, { card = cv, zone = state.zones.cave })
+                                end
+                                state.pending_destroy = {
+                                    choices = choices,
+                                    reward  = gs.pending_destroy.reward,
+                                    msg     = gs.pending_destroy.msg,
+                                }
+                                state.message = gs.message
+                            else
+                                state.resources.food.current = math.min(gs.food, state.resources.food.max)
+                                state.resources.ami.current = math.min(gs.ami, state.resources.ami.max)
+                                state.resources.dino_tokens.current = math.min(gs.dino_tokens, state.resources.dino_tokens.max)
+                                state.strength = gs.attack_force
+                                state.message = gs.message or state.message
+                                if (gs.pending_draw or 0) > 0 then
+                                    engine.dealCards(state.zones.deck, state.zones.hand, gs.pending_draw)
+                                end
                             end
                         end
                     end
@@ -1415,6 +1460,8 @@ function initGame(difficultyIndex, clan)
     state.selecting_ami_partner = false
     state.ami_partner_choices   = nil
     state.ami_initiator         = nil
+    -- Destroy card selection popup (chef powers)
+    state.pending_destroy = nil
     -- Enemy tracking for RAGE (one array per territory side)
     state.enemies_left = {}
     state.enemies_right = {}
@@ -1692,6 +1739,31 @@ function drawGame()
             love.graphics.setColor(1, 1, 1)
             local side_label = cdb and ("[" .. (cdb.ami_side or "?") .. "] ") or ""
             love.graphics.printf(side_label .. (c.name or "?"), popup_x, btn_y + 8, btn_w, "center")
+        end
+    end
+
+    -- Popup : sélection de carte à détruire (pouvoir chef)
+    if state.pending_destroy and #state.pending_destroy.choices > 0 then
+        local popup_x, popup_y = 300, 250
+        local btn_w, btn_h     = 260, 36
+        local n = #state.pending_destroy.choices
+        love.graphics.setColor(0, 0, 0, 0.65)
+        love.graphics.rectangle("fill", popup_x - 12, popup_y - 46,
+                                btn_w + 24, n * (btn_h + 6) + 56, 6, 6)
+        love.graphics.setColor(1, 0.5, 0.2)
+        love.graphics.printf("Choisir une carte à détruire :", popup_x, popup_y - 34, btn_w, "center")
+        for i, entry in ipairs(state.pending_destroy.choices) do
+            local btn_y = popup_y + (i - 1) * (btn_h + 6)
+            love.graphics.setColor(0.38, 0.10, 0.10)
+            love.graphics.rectangle("fill", popup_x, btn_y, btn_w, btn_h, 4)
+            love.graphics.setColor(0.9, 0.4, 0.4)
+            love.graphics.rectangle("line", popup_x, btn_y, btn_w, btn_h, 4)
+            love.graphics.setColor(1, 0.85, 0.85)
+            local zone_label = (entry.zone == state.zones.hand)    and "[Main] "    or
+                               (entry.zone == state.zones.cave)    and "[Grotte] "  or
+                                                                        "[Tableau] "
+            love.graphics.printf(zone_label .. (entry.card.name or "?"),
+                                 popup_x, btn_y + 10, btn_w, "center")
         end
     end
 

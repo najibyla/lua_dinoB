@@ -52,7 +52,7 @@ function solo.get_available_actions(card, state)
 
     -- Attack Dino: available if force accumulated or dino tokens in reserve
     if state.strength > 0 or state.resources.dino_tokens.current > 0 then
-        table.insert(actions, { key = solo.ACTIONS.ATTACK_DINO, label = "Attaquer Dino" })
+        table.insert(actions, { key = solo.ACTIONS.ATTACK_DINO, label = "Attaquer" })
     end
 
     -- Form Ami pair: card must have ami_side, and a compatible partner must exist in hand

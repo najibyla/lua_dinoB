@@ -244,46 +244,43 @@ end
 
 -- ── Chefs de clan ────────────────────────────────────────────────────────────
 
--- Bobor : détruire 1 carte → +1 Pion Ami
+-- Bobor : détruire 1 carte → +2 Pions Ami
 powers["bobor_destroy_for_ami"] = function(gs, card)
-    gs.pending_destroy = { count=1, reward=function() gs.ami = gs.ami + 1 end,
-                           msg="Bobor : détruisez 1 carte → +1 Pion Ami." }
+    gs.pending_destroy = { reward = { ami=2, food=0, dino_tokens=0, force=0 },
+                           msg = "Bobor : -1 carte → +2 Pions Ami." }
     gs.message = "Bobor : choisissez une carte à détruire."
     return true
 end
 
--- Cornio : détruire 1 carte → +1 Jeton Nourriture + 1 Jeton Dino
+-- Cornio : détruire 1 carte → +3 Nourriture
 powers["cornio_destroy_for_food"] = function(gs, card)
-    gs.pending_destroy = { count=1,
-        reward=function() gs.food = gs.food + 1; gs.dino_tokens = gs.dino_tokens + 1 end,
-        msg="Cornio : +1 Nourriture +1 Dino." }
+    gs.pending_destroy = { reward = { ami=0, food=3, dino_tokens=0, force=0 },
+                           msg = "Cornio : -1 carte → +3 Nourriture." }
     gs.message = "Cornio : choisissez une carte à détruire."
     return true
 end
 
 -- Magda : détruire 1 carte → +2 Jetons Dino
 powers["magda_destroy_for_dino"] = function(gs, card)
-    gs.pending_destroy = { count=1, reward=function() gs.dino_tokens = gs.dino_tokens + 2 end,
-                           msg="Magda : +2 Jetons Dino." }
+    gs.pending_destroy = { reward = { ami=0, food=0, dino_tokens=2, force=0 },
+                           msg = "Magda : -1 carte → +2 Jetons Dino." }
     gs.message = "Magda : choisissez une carte à détruire."
     return true
 end
 
 -- Sillia : détruire 1 carte → +1 Jeton Dino +1 Nourriture
 powers["sillia_destroy_for_dino_food"] = function(gs, card)
-    gs.pending_destroy = { count=1,
-        reward=function() gs.dino_tokens = gs.dino_tokens + 1; gs.food = gs.food + 1 end,
-        msg="Sillia : +1 Dino +1 Nourriture." }
+    gs.pending_destroy = { reward = { ami=0, food=1, dino_tokens=1, force=0 },
+                           msg = "Sillia : -1 carte → +1 Dino +1 Nourriture." }
     gs.message = "Sillia : choisissez une carte à détruire."
     return true
 end
 
--- Slayer : détruire 1 carte → +4 Force
+-- Slayar : détruire 1 carte → +4 Force
 powers["slayar_destroy_for_force"] = function(gs, card)
-    gs.pending_destroy = { count=1,
-        reward=function() gs.attack_force = gs.attack_force + 4 end,
-        msg="Slayer : +4 Force." }
-    gs.message = "Slayer : choisissez une carte à détruire."
+    gs.pending_destroy = { reward = { ami=0, food=0, dino_tokens=0, force=4 },
+                           msg = "Slayar : -1 carte → +4 Force." }
+    gs.message = "Slayar : choisissez une carte à détruire."
     return true
 end
 

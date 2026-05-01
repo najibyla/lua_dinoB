@@ -15,7 +15,7 @@ config.card_db = card_db
 -- ─────────────────────────────────────────────────────────────────────────────
 config.resources = {
     { name = "Nourriture",  key = "food",        icon = "🍖", color = {0.85, 0.65, 0.13}, max = 12, start = 2 },
-    { name = "Jetons Dino", key = "dino_tokens", icon = "🦕", color = {0.18, 0.80, 0.44}, max = 12, start = 6 },
+    { name = "Jetons Dino", key = "dino_tokens", icon = "🦕", color = {0.18, 0.80, 0.44}, max = 12, start = 0 },
     { name = "Pions Ami",   key = "ami",         icon = "🤝", color = {0.91, 0.30, 0.24}, max = 12, start = 2 },
 }
 
